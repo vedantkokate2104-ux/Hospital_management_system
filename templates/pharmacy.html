@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Pharmacy{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Pharmacy</h1>
+  <form class="d-flex gap-2" method="post" action="{{ url_for('pharmacy_restock') }}">
+    <input class="form-control" type="number" name="quantity" min="1" value="100" style="max-width: 110px">
+    <button class="btn btn-primary text-nowrap">Restock low items</button>
+  </form>
+</div>
+
+<div class="card p-3">
+  <table class="table table-hover mb-0">
+    <thead><tr><th>#</th><th>Medicine</th><th class="text-end">Unit price</th><th class="text-end">In stock</th><th class="text-end">Reorder level</th></tr></thead>
+    <tbody>
+    {% for m in medicines %}
+      <tr class="{% if m.low %}table-danger{% endif %}">
+        <td>{{ m.medicine_id }}</td>
+        <td>{{ m.name }}</td>
+        <td class="text-end">{{ m.unit_price|money }}</td>
+        <td class="text-end">{{ m.stock_qty }}</td>
+        <td class="text-end">{{ m.reorder_level }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <div class="form-text">Restock walks a MongoDB cursor over medicines below their reorder level (<code>$expr</code> query) and adds stock to each.</div>
+</div>
+{% endblock %}

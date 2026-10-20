@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}{{ patient.first_name }} {{ patient.last_name }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap gap-2 justify-content-between align-items-start mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ patient.first_name }} {{ patient.last_name }}</h1>
+    <div class="text-muted">
+      Patient #{{ patient.patient_id }} · {{ patient.age }} years · {{ patient.gender }}
+      {% if patient.blood_group %} · {{ patient.blood_group }}{% endif %}
+    </div>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-primary" href="{{ url_for('appointment_new', patient_id=patient.patient_id) }}">Book appointment</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('patient_edit', patient_id=patient.patient_id) }}">Edit</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('patient_xml', patient_id=patient.patient_id) }}" target="_blank">Export XML</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('patient_json', patient_id=patient.patient_id) }}" target="_blank">Export JSON</a>
+    <form method="post" action="{{ url_for('patient_delete', patient_id=patient.patient_id) }}"
+          onsubmit="return confirm('Delete this patient and all their records?')">
+      <button class="btn btn-outline-danger">Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card p-3">
+      <h2 class="h6 text-muted text-uppercase">Contact</h2>
+      <p class="mb-1">{{ patient.phone }}</p>
+      {% if patient.email %}<p class="mb-1">{{ patient.email }}</p>{% endif %}
+      <p class="mb-3">{{ patient.street or '' }}<br>{{ patient.city or '' }} {{ patient.pincode or '' }}<br>{{ patient.state or '' }}</p>
+      <h2 class="h6 text-muted text-uppercase">Allergies</h2>
+      <p class="mb-3">
+        {% for a in patient.allergies %}<span class="badge text-bg-warning me-1">{{ a }}</span>{% else %}None recorded{% endfor %}
+      </p>
+      <small class="text-muted">Registered {{ patient.registered_on.strftime('%d %b %Y') }}</small>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card p-3 mb-4">
+      <h2 class="h5">Appointments</h2>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>When</th><th>Doctor</th><th>Reason</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for a in appointments %}
+          <tr>
+            <td><a href="{{ url_for('appointment_detail', appointment_id=a.appointment_id) }}">{{ a.appointment_time.strftime('%d %b %Y, %H:%M') }}</a></td>
+            <td>{{ a.doctor_name }}</td>
+            <td>{{ a.reason or '' }}</td>
+            <td><span class="badge badge-status-{{ a.status }}">{{ a.status }}</span></td>
+          </tr>
+        {% else %}<tr><td colspan="4" class="text-muted">No appointments.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card p-3 mb-4">
+      <h2 class="h5">Admissions</h2>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Admitted</th><th>Discharged</th><th>Room</th><th>Doctor</th><th>Diagnosis</th></tr></thead>
+        <tbody>
+        {% for a in admissions %}
+          <tr>
+            <td>{{ a.admit_date }}</td>
+            <td>{{ a.discharge_date or 'Still admitted' }}</td>
+            <td>{{ a.room_number }}</td>
+            <td>{{ a.doctor_name }}</td>
+            <td>{{ a.diagnosis or '' }}</td>
+          </tr>
+        {% else %}<tr><td colspan="5" class="text-muted">No admissions.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card p-3 mb-4">
+      <h2 class="h5">Bills</h2>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>#</th><th>Date</th><th>For</th><th class="text-end">Amount</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for b in bills %}
+          <tr>
+            <td>{{ b.bill_id }}</td>
+            <td>{{ b.bill_date }}</td>
+            <td>{{ 'Appointment' if b.appointment_id else 'Admission' }}</td>
+            <td class="text-end">{{ b.amount|money }}</td>
+            <td><span class="badge badge-status-{{ b.payment_status }}">{{ b.payment_status }}</span></td>
+            <td class="text-end">
+              {% if b.payment_status == 'Unpaid' %}
+              <form method="post" action="{{ url_for('bill_pay', bill_id=b.bill_id) }}">
+                <button class="btn btn-sm btn-outline-success">Mark paid</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}<tr><td colspan="6" class="text-muted">No bills.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card p-3" id="records">
+      <h2 class="h5">Medical records <small class="text-muted fs-6">(documents / XML)</small></h2>
+      {% for r in records %}
+        <div class="border rounded p-2 mb-2">
+          <div class="d-flex justify-content-between mb-1">
+            <strong>{{ r.record_type }}{% if r.details.test %}: {{ r.details.test }}{% endif %}</strong>
+            <small class="text-muted">{{ r.recorded_at.strftime('%d %b %Y, %H:%M') }}</small>
+          </div>
+          <pre class="json">{{ r.details_pretty }}</pre>
+          {% if r.summary_xml %}<pre class="json mt-2">{{ r.summary_xml }}</pre>{% endif %}
+        </div>
+      {% else %}
+        <p class="text-muted">No records yet.</p>
+      {% endfor %}
+
+      <form method="post" action="{{ url_for('record_new', patient_id=patient.patient_id) }}" class="border-top pt-3 mt-2">
+        <h3 class="h6">Add lab report</h3>
+        <div class="row g-2">
+          <div class="col-md-6"><input class="form-control" name="test" placeholder="Test name, e.g. Blood Sugar" required></div>
+          <div class="col-md-6">
+            <select class="form-select" name="flag">
+              {% for f in ['Normal', 'Borderline', 'High', 'Critical'] %}<option>{{ f }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <textarea class="form-control" name="results" rows="3" placeholder="One result per line, e.g.&#10;fasting_glucose = 126&#10;pp_glucose = 182"></textarea>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-primary mt-2">Save report</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

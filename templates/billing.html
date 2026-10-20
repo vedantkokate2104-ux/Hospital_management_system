@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Billing{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Billing</h1>
+  <div class="btn-group">
+    {% for s in ['', 'Unpaid', 'Paid'] %}
+      <a class="btn btn-outline-primary {% if status == s %}active{% endif %}" href="{{ url_for('billing', status=s) }}">{{ s or 'All' }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card p-3">
+      <h2 class="h5">Bills</h2>
+      <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead><tr><th>#</th><th>Date</th><th>Patient</th><th>Type</th><th class="text-end">Amount</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for b in bills %}
+          <tr>
+            <td>{{ b.bill_id }}</td>
+            <td>{{ b.bill_date }}</td>
+            <td><a href="{{ url_for('patient_detail', patient_id=b.patient_id) }}">{{ b.patient_name }}</a></td>
+            <td>{{ b.source }}</td>
+            <td class="text-end">{{ b.amount|money }}</td>
+            <td><span class="badge badge-status-{{ b.payment_status }}">{{ b.payment_status }}</span></td>
+            <td class="text-end">
+              {% if b.payment_status == 'Unpaid' %}
+              <form method="post" action="{{ url_for('bill_pay', bill_id=b.bill_id) }}">
+                <button class="btn btn-sm btn-outline-success">Mark paid</button>
+              </form>
+              {% else %}<small class="text-muted">{{ b.paid_on }}</small>{% endif %}
+            </td>
+          </tr>
+        {% else %}<tr><td colspan="7" class="text-muted">No bills.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card p-3">
+      <h2 class="h5">Per patient <small class="text-muted fs-6">(aggregation pipeline)</small></h2>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Patient</th><th class="text-end">Billed</th><th class="text-end">Outstanding</th></tr></thead>
+        <tbody>
+        {% for s in summary %}
+          <tr>
+            <td><a href="{{ url_for('patient_detail', patient_id=s.patient_id) }}">{{ s.patient_name }}</a></td>
+            <td class="text-end">{{ s.total_billed|money }}</td>
+            <td class="text-end {% if s.outstanding > 0 %}text-danger{% endif %}">{{ s.outstanding|money }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

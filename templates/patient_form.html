@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">{{ title }}</h1>
+<form method="post" class="card p-4">
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">First name</label>
+      <input class="form-control" name="first_name" value="{{ patient.first_name or '' }}" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Last name</label>
+      <input class="form-control" name="last_name" value="{{ patient.last_name or '' }}" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Date of birth</label>
+      <input class="form-control" type="date" name="dob" value="{{ patient.dob or '' }}" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Gender</label>
+      <select class="form-select" name="gender" required>
+        {% for g in ['Male', 'Female', 'Other'] %}
+          <option {% if patient.gender == g %}selected{% endif %}>{{ g }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Blood group</label>
+      <select class="form-select" name="blood_group">
+        <option value="">Unknown</option>
+        {% for b in ['A+','A-','B+','B-','AB+','AB-','O+','O-'] %}
+          <option {% if patient.blood_group == b %}selected{% endif %}>{{ b }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Phone</label>
+      <input class="form-control" name="phone" value="{{ patient.phone or '' }}" required
+             placeholder="10 to 13 digits">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Email</label>
+      <input class="form-control" type="email" name="email" value="{{ patient.email or '' }}">
+    </div>
+    <div class="col-12"><hr class="my-1"><small class="text-muted">Address (stored as an embedded document)</small></div>
+    <div class="col-md-6">
+      <label class="form-label">Street</label>
+      <input class="form-control" name="street" value="{{ patient.street or '' }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">City</label>
+      <input class="form-control" name="city" value="{{ patient.city or '' }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">State</label>
+      <input class="form-control" name="state" value="{{ patient.state or 'Maharashtra' }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Pincode</label>
+      <input class="form-control" name="pincode" maxlength="6" value="{{ patient.pincode or '' }}">
+    </div>
+    <div class="col-12">
+      <label class="form-label">Allergies <small class="text-muted">(comma separated, stored as an array)</small></label>
+      <input class="form-control" name="allergies" value="{{ (patient.allergies or [])|join(', ') }}">
+    </div>
+  </div>
+  <div class="mt-4 d-flex gap-2">
+    <button class="btn btn-primary">Save</button>
+    <a class="btn btn-outline-secondary" href="{{ request.referrer or url_for('patients') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

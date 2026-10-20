@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Admissions{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Admissions</h1>
+  <a class="btn btn-primary" href="{{ url_for('admission_new') }}">Admit patient</a>
+</div>
+
+<div class="card p-3 mb-4">
+  <h2 class="h5">Currently admitted</h2>
+  <div class="table-responsive">
+  <table class="table table-sm mb-0">
+    <thead><tr><th>Patient</th><th>Room</th><th>Doctor</th><th>Diagnosis</th><th>Since</th><th class="text-end">Charge so far</th><th>Discharge</th></tr></thead>
+    <tbody>
+    {% for a in current %}
+      <tr>
+        <td><a href="{{ url_for('patient_detail', patient_id=a.patient_id) }}">{{ a.patient_name }}</a></td>
+        <td>{{ a.room_number }} <small class="text-muted">{{ a.room_type }}</small></td>
+        <td>{{ a.doctor_name }}</td>
+        <td>{{ a.diagnosis or '' }}</td>
+        <td>{{ a.admit_date }} <small class="text-muted">({{ a.days_admitted }} d)</small></td>
+        <td class="text-end">{{ a.charge_so_far|money }}</td>
+        <td>
+          <form class="d-flex gap-1" method="post" action="{{ url_for('admission_discharge', admission_id=a.admission_id) }}">
+            <input class="form-control form-control-sm" type="date" name="discharge_date" style="max-width: 150px">
+            <button class="btn btn-sm btn-outline-success">Discharge</button>
+          </form>
+        </td>
+      </tr>
+    {% else %}<tr><td colspan="7" class="text-muted">Nobody is admitted.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div class="form-text">Admit and discharge run <code>admit_patient</code> and <code>discharge_patient</code> in <code>services.py</code>; the room is claimed with an atomic conditional update.</div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card p-3">
+      <h2 class="h5">Discharged</h2>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Patient</th><th>Room</th><th>Doctor</th><th>Stay</th><th class="text-end">Bill</th></tr></thead>
+        <tbody>
+        {% for a in history %}
+          <tr>
+            <td><a href="{{ url_for('patient_detail', patient_id=a.patient_id) }}">{{ a.patient_name }}</a></td>
+            <td>{{ a.room_number }}</td>
+            <td>{{ a.doctor_name }}</td>
+            <td>{{ a.admit_date }} to {{ a.discharge_date }} ({{ a.days }} d)</td>
+            <td class="text-end">{{ a.amount|money }}</td>
+          </tr>
+        {% else %}<tr><td colspan="5" class="text-muted">No discharged patients.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card p-3">
+      <h2 class="h5">Rooms</h2>
+      {% for r in rooms %}
+        <div class="d-flex justify-content-between border-bottom py-1">
+          <span>{{ r.room_number }} <small class="text-muted">{{ r.room_type }} · {{ r.daily_charge|money }}/day</small></span>
+          <span class="badge badge-status-{{ r.status }}">{{ r.status }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

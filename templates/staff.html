@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Staff{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Staff</h1>
+<p class="text-muted">
+  Doctors and nurses are stored in one <code>staff</code> collection (EER specialization as a single collection with a
+  <code>role</code> discriminator). Each document has the common fields plus its subclass fields. The last table reads the whole collection.
+</p>
+
+<div class="card p-3 mb-4">
+  <h2 class="h5">Doctors</h2>
+  <div class="table-responsive">
+  <table class="table table-sm mb-0">
+    <thead><tr><th>#</th><th>Name</th><th>Specialization</th><th>Department</th><th>Floor</th><th class="text-end">Fee</th><th>Phone</th></tr></thead>
+    <tbody>
+    {% for d in doctors %}
+      <tr><td>{{ d.doctor_id }}</td><td>{{ d.doctor_name }}</td><td>{{ d.specialization }}</td><td>{{ d.department }}</td>
+          <td>{{ d.floor_no }}</td><td class="text-end">{{ d.consultation_fee|money }}</td><td>{{ d.phone }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<div class="card p-3 mb-4">
+  <h2 class="h5">Nurses</h2>
+  <table class="table table-sm mb-0">
+    <thead><tr><th>#</th><th>Name</th><th>Department</th><th>Ward</th><th>Shift</th><th>Phone</th></tr></thead>
+    <tbody>
+    {% for n in nurses %}
+      <tr><td>{{ n.staff_id }}</td><td>{{ n.first_name }} {{ n.last_name }}</td><td>{{ n.department }}</td>
+          <td>{{ n.ward }}</td><td>{{ n.shift }}</td><td>{{ n.phone }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card p-3">
+  <h2 class="h5">All staff <small class="text-muted fs-6">(db.staff.find())</small></h2>
+  <table class="table table-sm mb-0">
+    <thead><tr><th>#</th><th>Role</th><th>Name</th><th>Department</th><th>Hired</th><th class="text-end">Salary</th></tr></thead>
+    <tbody>
+    {% for s in everyone %}
+      <tr><td>{{ s.staff_id }}</td><td><code>{{ s.role }}</code></td><td>{{ s.full_name }}</td>
+          <td>{{ s.department }}</td><td>{{ s.hire_date }}</td><td class="text-end">{{ s.salary|money }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

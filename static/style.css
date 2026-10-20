@@ -1,0 +1,14 @@
+body { background: #f5f7fb; }
+.card { border: 0; box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }
+.stat .value { font-size: 1.8rem; font-weight: 600; }
+.stat .label { color: #6c757d; font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; }
+.table td, .table th { vertical-align: middle; }
+pre.json { background: #f8f9fa; padding: .75rem; border-radius: .375rem; font-size: .8rem; margin: 0; white-space: pre-wrap; }
+.badge-status-Scheduled { background: #0d6efd; }
+.badge-status-Completed { background: #198754; }
+.badge-status-Cancelled { background: #6c757d; }
+.badge-status-Paid      { background: #198754; }
+.badge-status-Unpaid    { background: #dc3545; }
+.badge-status-Available   { background: #198754; }
+.badge-status-Occupied    { background: #dc3545; }
+.badge-status-Maintenance { background: #ffc107; color: #000; }

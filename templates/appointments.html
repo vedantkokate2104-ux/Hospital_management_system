@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Appointments{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Appointments</h1>
+  <div class="d-flex gap-2">
+    <div class="btn-group">
+      {% for s in ['', 'Scheduled', 'Completed', 'Cancelled'] %}
+        <a class="btn btn-outline-primary {% if status == s %}active{% endif %}"
+           href="{{ url_for('appointments', status=s) }}">{{ s or 'All' }}</a>
+      {% endfor %}
+    </div>
+    <a class="btn btn-primary text-nowrap" href="{{ url_for('appointment_new') }}">Book appointment</a>
+  </div>
+</div>
+
+<div class="card p-3">
+  <div class="table-responsive">
+  <table class="table table-hover mb-0">
+    <thead><tr><th>#</th><th>When</th><th>Patient</th><th>Doctor</th><th>Reason</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for a in appointments %}
+      <tr>
+        <td><a href="{{ url_for('appointment_detail', appointment_id=a.appointment_id) }}">{{ a.appointment_id }}</a></td>
+        <td>{{ a.appointment_time.strftime('%d %b %Y, %H:%M') }}</td>
+        <td><a href="{{ url_for('patient_detail', patient_id=a.patient_id) }}">{{ a.patient_name }}</a></td>
+        <td>{{ a.doctor_name }} <small class="text-muted d-block">{{ a.specialization }}</small></td>
+        <td>{{ a.reason or '' }}</td>
+        <td><span class="badge badge-status-{{ a.status }}">{{ a.status }}</span></td>
+        <td class="text-end text-nowrap">
+          {% if a.status == 'Scheduled' %}
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('appointment_detail', appointment_id=a.appointment_id) }}">Prescribe</a>
+            {% for s, cls in [('Completed', 'success'), ('Cancelled', 'secondary')] %}
+            <form class="d-inline" method="post" action="{{ url_for('appointment_status', appointment_id=a.appointment_id) }}">
+              <input type="hidden" name="status" value="{{ s }}">
+              <button class="btn btn-sm btn-outline-{{ cls }}">{{ 'Complete' if s == 'Completed' else 'Cancel' }}</button>
+            </form>
+            {% endfor %}
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="7" class="text-muted">No appointments.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

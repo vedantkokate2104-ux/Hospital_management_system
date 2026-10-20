@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Appointment #{{ appt.appointment_id }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap gap-2 justify-content-between align-items-start mb-3">
+  <div>
+    <h1 class="h3 mb-1">Appointment #{{ appt.appointment_id }}
+      <span class="badge badge-status-{{ appt.status }} fs-6 align-middle">{{ appt.status }}</span></h1>
+    <div class="text-muted">
+      <a href="{{ url_for('patient_detail', patient_id=appt.patient_id) }}">{{ appt.patient_name }}</a>
+      with {{ appt.doctor_name }} · {{ appt.appointment_time.strftime('%d %b %Y, %H:%M') }}
+    </div>
+    {% if appt.reason %}<div>Reason: {{ appt.reason }}</div>{% endif %}
+  </div>
+  {% if appt.status == 'Scheduled' %}
+  <div class="d-flex gap-2">
+    {% for s, cls, label in [('Completed', 'success', 'Complete and bill'), ('Cancelled', 'outline-secondary', 'Cancel')] %}
+    <form method="post" action="{{ url_for('appointment_status', appointment_id=appt.appointment_id) }}">
+      <input type="hidden" name="status" value="{{ s }}">
+      <button class="btn btn-{{ cls }}">{{ label }}</button>
+    </form>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+{% if appt.allergies %}
+<div class="alert alert-warning">Patient allergies: {{ appt.allergies|join(', ') }}</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card p-3">
+      <h2 class="h5">Prescription</h2>
+      <table class="table table-sm">
+        <thead><tr><th>Medicine</th><th>Dosage</th><th>Qty</th><th>Days</th><th class="text-end">Cost</th></tr></thead>
+        <tbody>
+        {% for p in prescriptions %}
+          <tr><td>{{ p.name }}</td><td>{{ p.dosage }}</td><td>{{ p.quantity }}</td><td>{{ p.duration_days }}</td>
+              <td class="text-end">{{ p.cost|money }}</td></tr>
+        {% else %}<tr><td colspan="5" class="text-muted">Nothing prescribed yet.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+
+      {% if appt.status == 'Scheduled' %}
+      <form method="post" class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label small">Medicine</label>
+          <select class="form-select" name="medicine_id">
+            {% for m in medicines %}<option value="{{ m.medicine_id }}">{{ m.name }} ({{ m.stock_qty }} in stock)</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3"><label class="form-label small">Dosage</label><input class="form-control" name="dosage" placeholder="1 tablet twice daily" required></div>
+        <div class="col-md-2"><label class="form-label small">Qty</label><input class="form-control" type="number" min="1" name="quantity" required></div>
+        <div class="col-md-2"><label class="form-label small">Days</label><input class="form-control" type="number" min="1" name="duration_days" required></div>
+        <div class="col-md-1"><button class="btn btn-primary w-100">Add</button></div>
+      </form>
+      <div class="form-text">Pharmacy stock is reduced atomically; the prescription is refused if stock is short.</div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card p-3">
+      <h2 class="h5">Bill</h2>
+      {% if bill %}
+        <p class="display-6 mb-1">{{ bill.amount|money }}</p>
+        <p><span class="badge badge-status-{{ bill.payment_status }}">{{ bill.payment_status }}</span>
+           {% if bill.paid_on %}<small class="text-muted">on {{ bill.paid_on }}</small>{% endif %}</p>
+        {% if bill.payment_status == 'Unpaid' %}
+        <form method="post" action="{{ url_for('bill_pay', bill_id=bill.bill_id) }}">
+          <button class="btn btn-success">Mark paid</button>
+        </form>
+        {% endif %}
+      {% else %}
+        <p class="text-muted mb-0">The bill (consultation fee {{ appt.consultation_fee|money }} plus medicines) is created automatically when the appointment is completed.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

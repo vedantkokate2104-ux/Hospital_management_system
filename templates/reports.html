@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Reports</h1>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0">Monthly revenue <small class="text-muted fs-6">(materialized with <code>$out</code>)</small></h2>
+        <form method="post" action="{{ url_for('reports_refresh') }}"><button class="btn btn-sm btn-outline-primary">Refresh</button></form>
+      </div>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Month</th><th class="text-end">OPD</th><th class="text-end">IPD</th><th class="text-end">Total</th><th class="text-end">Collected</th></tr></thead>
+        <tbody>
+        {% for r in revenue %}
+          <tr><td>{{ r.month.strftime('%b %Y') }}</td><td class="text-end">{{ r.opd_revenue|money }}</td>
+              <td class="text-end">{{ r.ipd_revenue|money }}</td><td class="text-end fw-semibold">{{ r.total_revenue|money }}</td>
+              <td class="text-end">{{ r.collected|money }}</td></tr>
+        {% else %}<tr><td colspan="5" class="text-muted">No data. Press Refresh.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <h2 class="h5">Doctor workload <small class="text-muted fs-6">(cursor over doctors, last 90 days)</small></h2>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Doctor</th><th class="text-end">Appts</th><th class="text-end">Done</th><th class="text-end">Cancelled</th><th class="text-end">Revenue</th></tr></thead>
+        <tbody>
+        {% for w in workload %}
+          <tr><td>{{ w.doctor_name }} <small class="text-muted d-block">{{ w.specialization }}</small></td>
+              <td class="text-end">{{ w.total }}</td><td class="text-end">{{ w.completed }}</td>
+              <td class="text-end">{{ w.cancelled }}</td><td class="text-end">{{ w.revenue|money }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <h2 class="h5">Abnormal lab results <small class="text-muted fs-6">(query on <code>details.flag</code>)</small></h2>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Date</th><th>Patient</th><th>Test</th><th>Flag</th></tr></thead>
+        <tbody>
+        {% for f in flagged %}
+          <tr><td>{{ f.recorded_at.strftime('%d %b %Y') }}</td>
+              <td><a href="{{ url_for('patient_detail', patient_id=f.patient_id) }}#records">{{ f.patient_name }}</a></td>
+              <td>{{ f.test }}</td>
+              <td><span class="badge {{ 'text-bg-danger' if f.flag == 'Critical' else 'text-bg-warning' }}">{{ f.flag }}</span></td></tr>
+        {% else %}<tr><td colspan="4" class="text-muted">Nothing flagged.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <h2 class="h5">Audit log <small class="text-muted fs-6">(written on every change)</small></h2>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>When</th><th>Table</th><th>Operation</th><th>Row</th><th>By</th></tr></thead>
+        <tbody>
+        {% for a in audit %}
+          <tr><td>{{ a.changed_at.strftime('%d %b %H:%M:%S') }}</td><td>{{ a.table_name }}</td>
+              <td>{{ a.operation }}</td><td>{{ a.row_id }}</td><td>{{ a.changed_by }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

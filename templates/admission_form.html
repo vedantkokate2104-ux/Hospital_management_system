@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Admit patient{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Admit patient</h1>
+<form method="post" class="card p-4">
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Patient <small class="text-muted">(not currently admitted)</small></label>
+      <select class="form-select" name="patient_id" required>
+        {% for p in patients %}<option value="{{ p.patient_id }}">{{ p.first_name }} {{ p.last_name }} (#{{ p.patient_id }})</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Room <small class="text-muted">(available)</small></label>
+      <select class="form-select" name="room_id" required>
+        {% for r in rooms %}<option value="{{ r.room_id }}">{{ r.room_number }} · {{ r.room_type }} · {{ r.daily_charge|money }}/day</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Doctor in charge</label>
+      <select class="form-select" name="doctor_id" required>
+        {% for d in doctors %}<option value="{{ d.doctor_id }}">{{ d.doctor_name }} · {{ d.specialization }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Admit date</label>
+      <input class="form-control" type="date" name="admit_date" value="{{ today }}">
+    </div>
+    <div class="col-12">
+      <label class="form-label">Diagnosis</label>
+      <input class="form-control" name="diagnosis">
+    </div>
+  </div>
+  <div class="mt-4 d-flex gap-2">
+    <button class="btn btn-primary">Admit</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('admissions') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}
